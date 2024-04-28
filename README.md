@@ -15,19 +15,23 @@ mv ./log /usr/bin/ # any dir in `PATH`
 ## Info
 
 ```shell
-Usage: log <LOG_TYPE> <MESSAGE> <OPTIONS>
-Print a nice logging message.
+ Usage: log <LOG_TYPE> <MESSAGE> [OPTIONS]
+ Print a nice logging message.
 
-Arguments:
-  LOG_TYPE - Type of log (DEBUG, INFO, SHOW, TASK, WARN, FAIL)
-  MESSAGE  - Text message
+ Arguments:
+   LOG_TYPE - Type of log (DEBUG, FAIL, INFO, SHOW, TASK, WARN)
+   MESSAGE  - Text message
 
-Options:
-  -n       - Do not output trailing newline
-  -e       - Exit after logging the message
+ Options:
+   -n       - Do not output trailing newline
+   -e       - Exit after logging
 
-Example:
-  log INFO 'This is a generic message.'
+ Aware:
+    'export DEBUG=true' for LOG_TYPE `DEBUG` to print.
+
+ Example:
+   log INFO 'This is a generic message.'
+   log FAIL 'This is a generic message.' -e
 ```
 
 ## Screenshots

@@ -1,90 +1,129 @@
 #!/bin/bash
 
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then
-    echo 'This script cannot be sourced.'
+    echo 'This script cannot be sourced, please run it directly.'
     exit 1
 fi
 
-if [ "$1" = "--help" ] || [ -z "$1" ]; then
-    cat << EOF
+# tty color codes
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+NO_COLOR='\033[0m'
 
- Usage: $(basename "$0") <LOG_TYPE> <MESSAGE> <OPTIONS>
+# helping message to display
+HELP_MSG="
+ Usage: $(basename "$0") <LOG_TYPE> <MESSAGE> [OPTIONS]
  Print a nice logging message.
 
  Arguments:
-   LOG_TYPE - Type of log (DEBUG, INFO, SHOW, TASK, WARN, FAIL)
+   LOG_TYPE - Type of log (DEBUG, FAIL, INFO, SHOW, TASK, WARN)
    MESSAGE  - Text message
 
  Options:
    -n       - Do not output trailing newline
-   -e       - Exit after logging the message
+   -e       - Exit after logging
+
+ Aware:
+    'export DEBUG=true' for LOG_TYPE \`DEBUG\` to print.
 
  Example:
    $(basename "$0") INFO 'This is a generic message.'
+   $(basename "$0") FAIL 'This is a generic message.' -e
+"
 
-EOF
-    exit 0
-fi
+# logic of logging function --->
 
 function log {
-        local LOG_TYPE="$1"
-        local MESSAGE="$2"
-        shift 2 # ^ shift past
+    local LOG_TYPE="$1"
+    local MESSAGE="$2"
+    shift 2 # ^ shift past
 
-        local echo_opts=('-e') # enable interpretation of backslash escapes
-        local should_exit=false
+    local newline='\n'
+    local should_exit=false
 
-        # iterate over the remaining arguments
-        while (( "$#" )); do
-            case "$1" in
-                '-n') echo_opts+=('-n') ;; # no newline
-                '-e') should_exit=true ;; # exit after logging
-                *)    ;;
-            esac
-            shift
-        done
-
-        local BLUE='\033[0;34m'
-        local GREEN='\033[0;32m'
-        local RED='\033[0;31m'
-        local YELLOW='\033[0;33m'
-        local NO_COLOR='\033[0m'
-
-        local COLOR="$NO_COLOR"
-        local COLOR_REST="$NO_COLOR"
-
-        local OUT='1'
-
-        case "$LOG_TYPE" in
-            'DEBUG')
-                [ "$DEBUG" != true ] && return
-                COLOR="$YELLOW"; LOG_TYPE='DEBG' # 4-letter
+    # iterate over the remaining arguments
+    while (( "$#" )); do
+        case "$1" in
+            '-n')
+                newline='' # no newline
                 ;;
-            'FAIL')
-                COLOR="$RED"; COLOR_REST="$RED"; OUT='2'
-                ;;
-            'INFO')
-                ;;
-            'SHOW')
-                COLOR="$BLUE"; COLOR_REST="$BLUE"
-                ;;
-            'TASK')
-                COLOR="$GREEN"
-                ;;
-            'WARN')
-                COLOR="$YELLOW"; COLOR_REST="$YELLOW"; OUT='2'
-                ;;
+            '-e')
+                should_exit=true # exit after logging
+                ;; 
             *)
                 ;;
         esac
+        shift
+    done
 
-        echo "${echo_opts[@]}" "${COLOR}${LOG_TYPE}${COLOR_REST}> ${MESSAGE}${NO_COLOR}" >&"$OUT"
+    local COLOR="$NO_COLOR"
+    local COLOR_REST="$NO_COLOR"
+    local OUT=1
 
-        if [ "$should_exit" = true ]; then
-            exit $(( OUT - 1 ))
-        else
-            return $(( OUT - 1 ))
-        fi
-    }
+    case "$LOG_TYPE" in
+        'DEBUG')
+            [ "$DEBUG" != true ] && return
+            COLOR="$YELLOW"; LOG_TYPE='DEBG' # 4-letter abbreviation
+            ;;
+        'FAIL')
+            COLOR="$RED"; COLOR_REST="$RED"; OUT=2
+            ;;
+        'INFO')
+            ;;
+        'SHOW')
+            COLOR="$BLUE"; COLOR_REST="$BLUE"
+            ;;
+        'TASK')
+            COLOR="$GREEN"
+            ;;
+        'WARN')
+            COLOR="$YELLOW"; COLOR_REST="$YELLOW"; OUT=2
+            ;;
+        *)
+            echo "invalid log-type: '$LOG_TYPE'"
+            return 1
+            ;;
+    esac
+
+    # `%b` - interpret backslash escape sequences in string
+    printf "%b%b> %b%b%b%b" "$COLOR" "$LOG_TYPE" "$COLOR_REST" "$MESSAGE" \
+        "$NO_COLOR" "$newline" >&"$OUT"
+
+    if [ "$should_exit" = true ]; then
+        exit $(( OUT - 1 ))
+    fi
+
+    return $(( OUT - 1 ))
+}
+
+# process command-line arguments --->
+
+case "$1" in
+    '--help' | '')
+        echo "$HELP_MSG"
+        exit 0
+        ;;
+    '--all')
+        export DEBUG=true
+        MSG='This is a generic message.'
+
+        log 'DEBUG' "$MSG"
+        log 'FAIL' "$MSG" 
+        log 'INFO' "$MSG" 
+        log 'SHOW' "$MSG" 
+        log 'TASK' "$MSG"
+        log 'WARN' "$MSG"
+
+        exit 0
+        ;;
+    '--'*)
+        echo "invalid option: '$1'"
+        exit 1
+        ;;
+esac
+
+# execute logging command --->
 
 log "$@"
