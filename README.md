@@ -14,7 +14,7 @@ mv ./log /usr/bin/ # any dir in `PATH`
 
 ## Info
 
-```shell
+```
  Usage: log <LOG_TYPE> <MESSAGE> [OPTIONS]
  Print a nice logging message.
 
@@ -37,5 +37,5 @@ mv ./log /usr/bin/ # any dir in `PATH`
 ## Screenshots
 
 <div>
-    <img src="screenshots/001.webp" alt="screenshot" width="auto" height="350">
+    <img src="screenshots/001.png" alt="screenshot" width="auto" height="350">
 </div>
