@@ -76,7 +76,7 @@ function log {
             COLOR="$BLUE"; COLOR_REST="$BLUE"
             ;;
         'TASK')
-            COLOR="$GREEN"
+            COLOR="$GREEN"; COLOR_REST="$GREEN"
             ;;
         'WARN')
             COLOR="$YELLOW"; COLOR_REST="$YELLOW"; OUT=2
