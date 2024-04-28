@@ -1,0 +1,90 @@
+#!/bin/bash
+
+if [ "${BASH_SOURCE[0]}" != "$0" ]; then
+    echo 'This script cannot be sourced.'
+    exit 1
+fi
+
+if [ "$1" = "--help" ] || [ -z "$1" ]; then
+    cat << EOF
+
+ Usage: $(basename "$0") <LOG_TYPE> <MESSAGE> <OPTIONS>
+ Print a nice logging message.
+
+ Arguments:
+   LOG_TYPE - Type of log (DEBUG, INFO, SHOW, TASK, WARN, FAIL)
+   MESSAGE  - Text message
+
+ Options:
+   -n       - Do not output trailing newline
+   -e       - Exit after logging the message
+
+ Example:
+   $(basename "$0") INFO 'This is a generic message.'
+
+EOF
+    exit 0
+fi
+
+function log {
+        local LOG_TYPE="$1"
+        local MESSAGE="$2"
+        shift 2 # ^ shift past
+
+        local echo_opts=('-e') # enable interpretation of backslash escapes
+        local should_exit=false
+
+        # iterate over the remaining arguments
+        while (( "$#" )); do
+            case "$1" in
+                '-n') echo_opts+=('-n') ;; # no newline
+                '-e') should_exit=true ;; # exit after logging
+                *)    ;;
+            esac
+            shift
+        done
+
+        local BLUE='\033[0;34m'
+        local GREEN='\033[0;32m'
+        local RED='\033[0;31m'
+        local YELLOW='\033[0;33m'
+        local NO_COLOR='\033[0m'
+
+        local COLOR="$NO_COLOR"
+        local COLOR_REST="$NO_COLOR"
+
+        local OUT='1'
+
+        case "$LOG_TYPE" in
+            'DEBUG')
+                [ "$DEBUG" != true ] && return
+                COLOR="$YELLOW"; LOG_TYPE='DEBG' # 4-letter
+                ;;
+            'FAIL')
+                COLOR="$RED"; COLOR_REST="$RED"; OUT='2'
+                ;;
+            'INFO')
+                ;;
+            'SHOW')
+                COLOR="$BLUE"; COLOR_REST="$BLUE"
+                ;;
+            'TASK')
+                COLOR="$GREEN"
+                ;;
+            'WARN')
+                COLOR="$YELLOW"; COLOR_REST="$YELLOW"; OUT='2'
+                ;;
+            *)
+                ;;
+        esac
+
+        echo "${echo_opts[@]}" "${COLOR}${LOG_TYPE}${COLOR_REST}> ${MESSAGE}${NO_COLOR}" >&"$OUT"
+
+        if [ "$should_exit" = true ]; then
+            exit $(( OUT - 1 ))
+        else
+            return $(( OUT - 1 ))
+        fi
+    }
+
+log "$@"
