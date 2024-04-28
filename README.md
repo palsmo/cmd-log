@@ -37,5 +37,5 @@ mv ./log /usr/bin/ # any dir in `PATH`
 ## Screenshots
 
 <div>
-    <img src="screenshots/001.png" alt="screenshot" width="auto" height="270">
+    <img src="screenshots/001.png" alt="screenshot" width="auto" height="100">
 </div>
